@@ -1,0 +1,83 @@
+use java.lang.Thread
+use java.lang.Math
+
+
+seterr ERR_HANDLER_GLOBAL
+  input 'cs', "Hours: ", hours%
+  input (0,err=ERR_HANDLER_MINUTES) "Minutes: ", minutes%
+  input (0,err=ERR_HANDLER_SECONDS) "Seconds: ", seconds%
+  
+  hoursToMS% = hours% * 3600000
+  minutesToMS% = minutes% * 60000
+  secondsToMS% = seconds% * 1000
+  
+  let hoursRemaining% = 0
+  let minutesRemaining% = 0
+  let secondsRemaining% = 0
+  
+  timerTotal% = hoursToMS% + minutesToMS% + secondsToMS%
+  let timerRemaining% = timerTotal%
+  let currentTime% = TIM * 3600000
+  futureTime% = timerTotal% + currentTime%
+  
+  initialTime% = FNConvertTime% (timerRemaining%)
+  
+  DEF FNConvertTime% (timerRemaining%)
+  
+      let seconds% = Math.floor(timerRemaining% / 1000)
+      let minutes% = Math.floor(seconds% / 60)
+      hoursRemaining% = Math.floor(minutes% / 60)
+      
+      if seconds% > 60 then 
+          secondsRemaining% = MOD(seconds%, 60)
+      else
+          secondsRemaining% = seconds%
+      endif
+      
+      if minutes% > 60 then 
+          minutesRemaining% = MOD(minutes%, 60)
+      else
+          minutesRemaining% = minutes%
+      endif
+      
+      RETURN timerRemaining%
+  FNEND
+       
+  while currentTime% < futureTime%
+      
+      hoursRemaining$ = STR(hoursRemaining%, "00")
+      minutesRemaining$ = STR(minutesRemaining%, "00")
+      secondsRemaining$ = STR(secondsRemaining%, "00")
+      
+      print 'cs', hoursRemaining$ + ":" + minutesRemaining$ + ":" + secondsRemaining$
+      
+      Thread.sleep(1000)
+      
+      currentTime% = currentTime% + 1000
+      timerRemaining% = timerRemaining% - 1000
+      let nextTime% = FNConvertTime%(timerRemaining%)
+  wend
+  
+  if secondsRemaining% = 0 AND minutesRemaining% = 0 AND hoursRemaining% = 0 then 
+      sysgui = unt
+      open (sysgui)"X0"
+      sysgui! = bbjapi().getSysGui()
+      sysgui!.beep()
+      print 'cs', "Time's Up!"
+  endif
+end
+
+ERR_HANDLER_GLOBAL:
+print "Please set a valid number of hours"
+goto ERR_REPORTER
+
+ERR_HANDLER_MINUTES:
+print "Please set a valid number of minutes"
+
+ERR_HANDLER_SECONDS:
+print "Please set a valid number of seconds"
+
+ERR_REPORTER:
+print "An error ",err, "occurred on line ",tcb(5)
+print "The error message is: ",errmes(-1)
+end
